@@ -54,7 +54,7 @@ var Game = new function() {
   
 
   // Handle Input
-  var KEY_CODES = { 37:'left', 39:'right', 32 :'fire' };
+  var KEY_CODES = { 38:'up', 40:'down', 32 :'fire' };
   this.keys = {};
 
   this.setupInput = function() {
@@ -145,7 +145,7 @@ var SpriteSheet = new function() {
     this.map = spriteData;
     this.image = new Image();
     this.image.onload = callback;
-    this.image.src = 'img/sprites.png';
+    this.image.src = 'img/spritesTapper.png';
   };
 
   this.draw = function(ctx,sprite,x,y,frame) {
