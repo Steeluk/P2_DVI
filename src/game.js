@@ -100,13 +100,18 @@ var level1 = [
     [22000, 25000, 400, 'wiggle', {x: 100}]
 ];
 
-var positions = [{x: 325, y: 90}, {x: 357, y: 185}, {x: 389, y: 281}, {x: 421, y: 377}];
+var positionsPlayer = [{x: 325, y: 90}, {x: 357, y: 185}, {x: 389, y: 281}, {x: 421, y: 377}];
+var positionsClient = [{x: 120, y: 90}, {x: 91, y: 185}, {x: 55, y: 281}, {x: 21, y: 377}];
 
 var playGame = function () {
-    var board = new GameBoard();
-    board.add(new Background());
-    board.add(new Player());
-    Game.setBoard(3, board);
+    var board1 = new GameBoard();
+    board1.add(new Background());
+
+    Game.setBoard(3, board1);
+    var board2 = new GameBoard();
+    board2.add(new Player());
+    board2.add(new Client());
+    Game.setBoard(5, board2);
     /*board.add(new PlayerShip());
     board.add(new Level(level1,winGame));
     Game.setBoard(3,board);
@@ -143,8 +148,8 @@ var Player = function () {
 
     this.reload = this.reloadTime;
     this.position = this.iniPosition;
-    this.x = positions[this.position].x;
-    this.y = positions[this.position].y;
+    this.x = positionsPlayer[this.position].x;
+    this.y = positionsPlayer[this.position].y;
 
     this.step = function (dt) {
 
@@ -152,10 +157,12 @@ var Player = function () {
 
         if (this.reload < 0) {
             if (Game.keys['down']) {
+                Game.keys['down'] = false;
                 this.position++;
                 //console.log("DOWN");
             }
             else if (Game.keys['up']) {
+                Game.keys['up'] = false;
                 this.position--;
                 //console.log("UP");
             }
@@ -169,23 +176,62 @@ var Player = function () {
             //console.log(this.position);
             //console.log(positions[this.position]);
 
-            this.x = positions[this.position].x;
-            this.y = positions[this.position].y;
+            this.x = positionsPlayer[this.position].x;
+            this.y = positionsPlayer[this.position].y;
+
+            if (Game.keys['fire']) {
+                Game.keys['fire'] = false;
+                //console.log("CERVEZA");
+                this.board.add(new Beer(this.x, this.y + this.h / 2));
+            }
 
             this.reload = this.reloadTime;
         }
-        /*if(Game.keys['fire'] && this.reload < 0) {
-            Game.keys['fire'] = false;
-            this.reload = this.reloadTime;
-
-            this.board.add(new PlayerMissile(this.x,this.y+this.h/2));
-            this.board.add(new PlayerMissile(this.x+this.w,this.y+this.h/2));
-        }*/
     };
 };
 
 Player.prototype = new Sprite();
 Player.prototype.type = OBJECT_PLAYER;
+
+var Beer = function (x, y) {
+    this.setup('Beer', {vx: -700, damage: 10});
+    this.x = x - this.w / 2;
+    this.y = y - this.h;
+};
+
+Beer.prototype = new Sprite();
+Beer.prototype.type = OBJECT_PLAYER_PROJECTILE;
+
+Beer.prototype.step = function (dt) {
+    this.x += this.vx * dt;
+    var collision = this.board.collide(this, OBJECT_ENEMY);
+    /*if (collision) {
+        collision.hit(this.damage);
+        this.board.remove(this);
+    } else if (this.y < -this.h) {
+        this.board.remove(this);
+    }*/
+};
+
+var Client = function (x, y) {
+    this.setup('NPC', {vx: -50, damage: 10});
+    this.x = positionsClient[0].x;//x - this.w / 2;
+    this.y = positionsClient[0].y;//y - this.h;
+};
+
+Client.prototype = new Sprite();
+Client.prototype.type = OBJECT_ENEMY;
+
+Client.prototype.step = function (dt) {
+    this.x -= this.vx * dt;
+    var collision = this.board.collide(this, OBJECT_ENEMY);
+    /*if (collision) {
+        collision.hit(this.damage);
+        this.board.remove(this);
+    } else if (this.y < -this.h) {
+        this.board.remove(this);
+    }*/
+};
 
 var Starfield = function (speed, opacity, numStars, clear) {
 

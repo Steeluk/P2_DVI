@@ -207,7 +207,7 @@ var GameBoard = function() {
   // Mark an object for removal
   this.remove = function(obj) { 
     var idx = this.removed.indexOf(obj);
-    if(idx == -1) {
+    if(idx === -1) {
       this.removed.push(obj); 
       return true;
     } else {
@@ -222,7 +222,7 @@ var GameBoard = function() {
   this.finalizeRemoved = function() {
     for(var i=0,len=this.removed.length;i<len;i++) {
       var idx = this.objects.indexOf(this.removed[i]);
-      if(idx != -1) {
+      if(idx !== -1) {
         this.cnt[this.removed[i].type]--;
         this.objects.splice(idx,1);
       }
@@ -270,7 +270,7 @@ var GameBoard = function() {
   // match against an optional type
   this.collide = function(obj,type) {
     return this.detect(function() {
-      if(obj != this) {
+      if(obj !== this) {
        var col = (!type || this.type & type) && board.overlap(obj,this);
        return col ? this : false;
       }
@@ -346,7 +346,7 @@ Level.prototype.step = function(dt) {
   // Remove any objects from the levelData that have passed
   for(var i=0,len=remove.length;i<len;i++) {
     var remIdx = this.levelData.indexOf(remove[i]);
-    if(remIdx != -1) this.levelData.splice(remIdx,1);
+    if(remIdx !== -1) this.levelData.splice(remIdx,1);
   }
 
   // If there are no more enemies on the board or in 
@@ -412,12 +412,12 @@ var TouchControls = function() {
       } 
     }
 
-    if(e.type == 'touchstart' || e.type == 'touchend') {
+    if(e.type === 'touchstart' || e.type === 'touchend') {
       for(i=0;i<e.changedTouches.length;i++) {
         touch = e.changedTouches[i];
         x = touch.pageX / Game.canvasMultiplier - Game.canvas.offsetLeft;
         if(x > 4 * unitWidth) {
-          Game.keys['fire'] = (e.type == 'touchstart');
+          Game.keys['fire'] = (e.type === 'touchstart');
         }
       }
     }
