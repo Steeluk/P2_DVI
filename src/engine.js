@@ -331,11 +331,11 @@ Level.prototype.step = function(dt) {
       remove.push(curShip);
     } else if(curShip[0] < this.t) {
       // Get the enemy definition blueprint
-      var enemy = enemies[curShip[3]],
-          override = curShip[4];
+      var position = enemies[curShip[3]];
+          //override = curShip[4];
 
       // Add a new enemy with the blueprint and override
-      this.board.add(new Enemy(enemy,override));
+      this.board.add(new Client(position));
 
       // Increment the start time by the gap
       curShip[0] += curShip[2];

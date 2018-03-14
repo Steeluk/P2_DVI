@@ -43,7 +43,7 @@ var sprites = {
     }
 };
 
-var enemies = {
+/*var enemies = {
     straight: {
         x: 0, y: -50, sprite: 'enemy_ship', health: 10,
         E: 100
@@ -64,7 +64,7 @@ var enemies = {
         x: 0, y: -50, sprite: 'enemy_circle', health: 10,
         B: 150, C: 1.2, E: 75
     }
-};
+};*/
 
 var OBJECT_PLAYER = 1,
     OBJECT_PLAYER_PROJECTILE = 2,
@@ -100,8 +100,23 @@ var level1 = [
     [22000, 25000, 400, 'wiggle', {x: 100}]
 ];
 
+var myLevel = [
+    // Start,   End, Gap,  Type,   Override
+    [0, 2000, 1000, 'bar1'],
+    [1000, 3000, 1000, 'bar2'],
+    [2000, 4000, 1000, 'bar3'],
+    [3000, 5000, 1000, 'bar4']
+];
+
 var positionsPlayer = [{x: 325, y: 90}, {x: 357, y: 185}, {x: 389, y: 281}, {x: 421, y: 377}];
-var positionsClient = [{x: 120, y: 90}, {x: 91, y: 185}, {x: 55, y: 281}, {x: 21, y: 377}];
+var positionsClient = [{x: 120, y: 90}, {x: 91, y: 185}, {x: 56, y: 281}, {x: 24, y: 377}];
+
+var enemies = {
+    bar1: {x: positionsClient[0].x, y: positionsClient[0].y},
+    bar2: {x: positionsClient[1].x, y: positionsClient[1].y},
+    bar3: {x: positionsClient[2].x, y: positionsClient[2].y},
+    bar4: {x: positionsClient[3].x, y: positionsClient[3].y}
+};
 
 var playGame = function () {
     var board1 = new GameBoard();
@@ -109,8 +124,13 @@ var playGame = function () {
 
     Game.setBoard(3, board1);
     var board2 = new GameBoard();
+    for(var i = 0; i < 4; i++){
+        board2.add(new DeadZone(positionsPlayer[i].x + 10, positionsPlayer[i].y));
+        board2.add(new DeadZone(positionsClient[i].x - 20, positionsClient[i].y));
+    }
     board2.add(new Player());
-    board2.add(new Client());
+    //board2.add(new Client());
+    board2.add(new Level(myLevel,winGame));
     Game.setBoard(5, board2);
     /*board.add(new PlayerShip());
     board.add(new Level(level1,winGame));
@@ -150,6 +170,7 @@ var Player = function () {
     this.position = this.iniPosition;
     this.x = positionsPlayer[this.position].x;
     this.y = positionsPlayer[this.position].y;
+    this.beer = new Beer();
 
     this.step = function (dt) {
 
@@ -181,8 +202,8 @@ var Player = function () {
 
             if (Game.keys['fire']) {
                 Game.keys['fire'] = false;
-                //console.log("CERVEZA");
-                this.board.add(new Beer(this.x, this.y + this.h / 2));
+                this.board.add(new Beer(this.x - 5, this.y + this.h/2, this.position));
+                //this.board.add(Object.create(this, {x: this.x, y: this.y + this.h / 2, pos: this.position}));
             }
 
             this.reload = this.reloadTime;
@@ -193,44 +214,85 @@ var Player = function () {
 Player.prototype = new Sprite();
 Player.prototype.type = OBJECT_PLAYER;
 
-var Beer = function (x, y) {
-    this.setup('Beer', {vx: -700, damage: 10});
+var Beer = function (x, y, pos) {
+    this.setup('Beer', {vx: -100, damage: 10});
     this.x = x - this.w / 2;
     this.y = y - this.h;
+    this.position = pos;
+    this.llena = true;
+
+    this.step = function (dt) {
+        if(this.llena) {
+            this.x += this.vx * dt;
+            var collision = this.board.collide(this, OBJECT_ENEMY);
+            if (collision) {
+                collision.hit(this.damage);
+                this.vx = -this.vx;
+                this.sprite = 'Glass';
+                //this.setup('Glass');
+                this.llena = false;
+            }/* else if (this.x < (positionsClient[this.position].x - this.w / 2)) {
+            this.board.remove(this);
+        }*/
+        }
+        else{
+            this.x += this.vx * dt;
+            var collision = this.board.collide(this, OBJECT_PLAYER);
+            if (collision) {
+                this.board.remove(this);
+            }/* else if (this.x > (positionsPlayer[this.position].x - this.w / 2)) {
+            this.board.remove(this);
+        }*/
+        }
+    }
 };
 
 Beer.prototype = new Sprite();
 Beer.prototype.type = OBJECT_PLAYER_PROJECTILE;
 
-Beer.prototype.step = function (dt) {
-    this.x += this.vx * dt;
-    var collision = this.board.collide(this, OBJECT_ENEMY);
-    /*if (collision) {
-        collision.hit(this.damage);
-        this.board.remove(this);
-    } else if (this.y < -this.h) {
-        this.board.remove(this);
-    }*/
-};
+var Client = function (position) {
+    this.setup('NPC', {vx: -40, damage: 10});
+    this.merge(position);
+    /*this.x = positionsClient[3].x;//x - this.w / 2;
+    this.y = positionsClient[3].y;//y - this.h;*/
 
-var Client = function (x, y) {
-    this.setup('NPC', {vx: -50, damage: 10});
-    this.x = positionsClient[0].x;//x - this.w / 2;
-    this.y = positionsClient[0].y;//y - this.h;
+    this.step = function (dt) {
+        this.x -= this.vx * dt;
+        /*var collision = this.board.collide(this, OBJECT_PLAYER_PROJECTILE);
+        if(collision)
+            this.board.remove(this);*/
+        /*} else if (this.x < -this.w)
+            this.board.remove(this);*/
+
+        /*if (collision) {
+            collision.hit(this.damage);
+            this.board.remove(this);
+        } else if (this.y < -this.h) {
+            this.board.remove(this);
+        }*/
+    }
 };
 
 Client.prototype = new Sprite();
 Client.prototype.type = OBJECT_ENEMY;
 
-Client.prototype.step = function (dt) {
-    this.x -= this.vx * dt;
-    var collision = this.board.collide(this, OBJECT_ENEMY);
-    /*if (collision) {
-        collision.hit(this.damage);
-        this.board.remove(this);
-    } else if (this.y < -this.h) {
-        this.board.remove(this);
-    }*/
+var DeadZone = function(x, y){
+    this.x = x; //positionsClient[0].x - 20;//x - this.w / 2;
+    this.y = y;//positionsClient[0].y;
+    this.w = 10;
+    this.h = 70;
+
+    this.draw = function (ctx) {
+        ctx.fillStyle = "#00FF00";
+        ctx.fillRect(this.x, this.y, this.w, this.h);
+    };
+
+    this.step = function (dt) {
+        var collision = this.board.collide(this, OBJECT_ENEMY | OBJECT_PLAYER_PROJECTILE);
+        if(collision){
+            this.board.remove(collision);
+        }
+    };
 };
 
 var Starfield = function (speed, opacity, numStars, clear) {
